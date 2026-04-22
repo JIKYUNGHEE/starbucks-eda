@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starbucks Korea Data Insights Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --sb-green: #007042;
+            --sb-gold: #d4e9e2;
+            --sb-dark: #1e1e1e;
+            --sb-bg: #f4f7f6;
+            --glass: rgba(255, 255, 255, 0.85);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: var(--sb-bg);
+            color: #333;
+            line-height: 1.6;
+            overflow: hidden; /* 사이드바 고정 및 섹션별 스크롤을 위해 */
+        }
+
+        /* Layout */
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        aside {
+            background-color: var(--sb-dark);
+            color: white;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--sb-gold);
+            margin-bottom: 3rem;
+            cursor: pointer;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: var(--sb-green);
+        }
+
+        nav ul {
+            list-style: none;
+        }
+
+        nav li {
+            margin-bottom: 1rem;
+        }
+
+        nav a {
+            color: #aaa;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        nav a.active {
+            color: white;
+            background-color: var(--sb-green);
+        }
+
+        nav a i {
+            width: 20px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Main Content */
+        main {
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+            padding: 2.5rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--sb-dark);
+        }
+
+        .header-title p {
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .kpi-card {
+            background: var(--glass);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+
+        .kpi-icon {
+            width: 45px;
+            height: 45px;
+            background-color: var(--sb-gold);
+            color: var(--sb-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        /* Section Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--sb-green);
+        }
+
+        /* Map Utility */
+        .map-frame-wrapper {
+            width: 100%;
+            height: 700px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+
+        .map-frame-wrapper.mini {
+            height: 400px;
+        }
+
+        /* Charts 갤러리 */
+        .charts-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .chart-item {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            text-align: center;
+        }
+
+        .chart-item img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        /* Report Style */
+        .report-content {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 3.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .report-content h2 { margin-top: 2rem; color: var(--sb-green); border-bottom: 2px solid var(--sb-gold); padding-bottom: 10px; }
+        .report-content h3 { margin-top: 1.5rem; color: var(--sb-dark); }
+        .report-content p { margin: 1rem 0; color: #555; font-size: 1.1rem; }
+        .report-content ul { margin-left: 1.5rem; margin-bottom: 1rem; }
+        .report-content img { width: 100%; border-radius: 12px; margin: 2rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* Settings UI */
+        .settings-list {
+            list-style: none;
+        }
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: #ccc;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: 0.3s;
+        }
+        .toggle-switch.active { background: var(--sb-green); }
+        .toggle-switch.active::before { left: 27px; }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .container { grid-template-columns: 1fr; }
+            aside { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside>
+            <div class="logo" onclick="showSection('dashboard')">
+                <i class="fa-solid fa-mug-hot"></i>
+                <span>STARBUCKS</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a onclick="showSection('dashboard')" id="nav-dashboard" class="nav-item active"><i class="fa-solid fa-chart-line"></i> 대시보드 홈</a></li>
+                    <li><a onclick="showSection('map')" id="nav-map" class="nav-item"><i class="fa-solid fa-map-location-dot"></i> 전국 매장 지도</a></li>
+                    <li><a onclick="showSection('report')" id="nav-report" class="nav-item"><i class="fa-solid fa-file-lines"></i> 데이터 리포트</a></li>
+                    <li><a onclick="showSection('settings')" id="nav-settings" class="nav-item"><i class="fa-solid fa-gear"></i> 설정</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <p>© 2026 Starbucks Data Lab</p>
+                <p>Designed by Antigravity</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <!-- header는 모든 섹션 공통 또는 섹션별로 다르게 가능 -->
+            <header>
+                <div class="header-title">
+                    <h1 id="main-title">대시보드 홈</h1>
+                    <p id="main-sub-title">데이터 기반의 스타벅스 인사이트를 한눈에 확인하세요.</p>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="content-section active">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fa-solid fa-store"></i></div>
+                        <div class="kpi-value">2,134</div>
+                        <div style="font-size: 0.85rem; color: #666;">전국 매장 수</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fa-solid fa-city"></i></div>
+                        <div class="kpi-value">51.2%</div>
+                        <div style="font-size: 0.85rem; color: #666;">수도권 비중</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <div class="kpi-value">91</div>
+                        <div style="font-size: 0.85rem; color: #666;">최다 보유 (강남구)</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div class="kpi-value">Stable</div>
+                        <div style="font-size: 0.85rem; color: #666;">시장 지배력 지수</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="section-card">
+                        <div class="section-title"><i class="fa-solid fa-map"></i> 매장 분포 요약</div>
+                        <div class="map-frame-wrapper mini">
+                            <iframe src="./starbucks_map.html" style="display: block; width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+                    </div>
+                    <div class="section-card">
+                        <div class="section-title"><i class="fa-solid fa-lightbulb"></i> 주요 분석 인사이트</div>
+                        <div style="font-size: 0.95rem; color: #555;">
+                            <p style="margin-bottom: 10px;">• <strong>강남 클러스터:</strong> 강남구 내 91개 매장은 수요 밀집형 출점 전략의 표본입니다.</p>
+                            <p style="margin-bottom: 10px;">• <strong>수도권 중심:</strong> 전체 매출의 핵심인 서울/경기 벨트에 매장이 고도로 집중되어 있습니다.</p>
+                            <p style="margin-bottom: 10px;">• <strong>대로변 우선:</strong> TF-IDF 분석 결과 '대로', '빌딩' 키워드가 주소 상위에 포진해 있습니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-title"><i class="fa-solid fa-chart-pie"></i> 시도별 주요 분포</div>
+                    <div class="charts-gallery">
+                        <div class="chart-item">
+                            <img src="../images/01_sido_counts.png" alt="시도별 분포">
+                            <p>전국 시도별 매장 분포</p>
+                        </div>
+                        <div class="chart-item">
+                            <img src="../images/09_sido_share_pie.png" alt="점유율">
+                            <p>수도권 대비 전국 점유율</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Map Section -->
+            <section id="section-map" class="content-section">
+                <div class="section-card">
+                    <div class="section-title"><i class="fa-solid fa-expand"></i> 전국 매장 인터랙티브 지도</div>
+                    <div class="map-frame-wrapper">
+                        <iframe src="./starbucks_map.html" style="display: block; width: 100%; height: 100%; border: none;"></iframe>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Report Section -->
+            <section id="section-report" class="content-section">
+                <div class="report-content">
+                    <h1 style="font-size: 2.2rem; margin-bottom: 1rem; color: var(--sb-dark);">데이터 EDA 분석 리포트</h1>
+                    <p style="color: #888;">작성일: 2026년 4월 20일 | 전문 데이터 분석가 Antigravity</p>
+                    
+                    <h2>1. 지리적 데이터 분석</h2>
+                    <p>스타벅스 매장의 지리적 좌표인 위도와 경도는 단순한 위치 정보를 넘어, 한국의 경제적 혈맥을 보여줍니다. 데이터 분석 결과 매장의 50% 이상이 수도권에 강력하게 쏠려 있음을 확인했습니다.</p>
+                    <img src="../images/03_geo_scatter.png" alt="지리적 산점도">
+                    
+                    <h2>2. 지역별 출점 전략</h2>
+                    <p>서울과 경기 지역의 매장 수가 전체의 절반을 차지합니다. 특히 서울 내에서도 업무 지구가 압도적인 상위권을 차지하고 있는 것은 '커피 소비 루틴'을 완벽하게 장악했음을 의미합니다.</p>
+                    <img src="../images/02_gugun_top30.png" alt="구군별 TOP 30">
+                    <img src="../images/06_seoul_gugun.png" alt="서울 자치구 분포">
+                    
+                    <h2>3. 주소 키워드 분석 (TF-IDF)</h2>
+                    <p>'대로', '빌딩', '타워' 등의 키워드는 스타벅스가 '성공한 도시인의 휴식 공간'이라는 브랜드 이미지를 구축하는 데 성공했음을 보여줍니다.</p>
+                    <img src="../images/08_tfidf_address.png" alt="TF-IDF 분석">
+
+                    <h2>4. 종합 비즈니스 제언</h2>
+                    <p>스타벅스는 이제 도심 오피스 상권의 포화를 넘어 DT(Drive-Thru)를 통한 모빌리티 비즈니스로 눈을 돌리고 있습니다. 향후 차량 진입량 기반의 매출 비중이 더욱 확대될 것으로 전망됩니다.</p>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="section-settings" class="content-section">
+                <div class="section-card">
+                    <div class="section-title"><i class="fa-solid fa-sliders"></i> 화면 설정</div>
+                    <ul class="settings-list">
+                        <li class="settings-item">
+                            <span>다크 모드</span>
+                            <div class="toggle-switch" id="dark-mode-toggle" onclick="this.classList.toggle('active')"></div>
+                        </li>
+                        <li class="settings-item">
+                            <span>데이터 자동 업데이트</span>
+                            <div class="toggle-switch active"></div>
+                        </li>
+                        <li class="settings-item">
+                            <span>고해상도 이미지 활성화</span>
+                            <div class="toggle-switch active"></div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="section-card">
+                    <div class="section-title"><i class="fa-solid fa-info-circle"></i> 시스템 정보</div>
+                    <div style="padding: 10px; font-size: 0.9rem; color: #666;">
+                        <p>버전: 1.1.0-alpha</p>
+                        <p>데이터 최종 업데이트: 2026-04-20 12:00:00</p>
+                        <p>엔진: Antigravity Analytics Core v4.2</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Navigation Logic Scroll Script -->
+    <script>
+        function showSection(sectionId) {
+            // 모든 섹션 숨기기
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(s => s.classList.remove('active'));
+
+            // 모든 네비 메뉴 활성화 해제
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+
+            // 선택된 섹션 및 메뉴 활성화
+            document.getElementById('section-' + sectionId).classList.add('active');
+            document.getElementById('nav-' + sectionId).classList.add('active');
+
+            // 타이틀 변경
+            const titleMap = {
+                'dashboard': ['대시보드 홈', '데이터 기반의 스타벅스 인사이트를 한눈에 확인하세요.'],
+                'map': ['전국 매장 지도', '전국 스타벅스 매장의 상세 위치와 정보를 탐색합니다.'],
+                'report': ['데이터 리포트', '전문 분석가가 작성한 심층 분석 및 비즈니스 전략 보고서입니다.'],
+                'settings': ['사용자 설정', '시스템 정보 및 화면 표시 설정을 관리합니다.']
+            };
+
+            document.getElementById('main-title').innerText = titleMap[sectionId][0];
+            document.getElementById('main-sub-title').innerText = titleMap[sectionId][1];
+
+            // 페이지 상단으로 스크롤
+            document.querySelector('main').scrollTop = 0;
+        }
+    </script>
+</body>
+</html>
